@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Dashboard - E-Voting System</title>
+    <link rel="stylesheet" href="css/forms.css"> <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f7;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for longer content */
+            min-height: 100vh;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 1000px; /* Wider container for more content */
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            overflow: hidden; /* For rounded corners */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header and Tabs */
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+            border-bottom: 1px solid #0056b3;
+            position: relative;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            letter-spacing: 1px;
+        }
+        .header p {
+            margin-top: 5px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #495057;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            position: relative;
+            outline: none;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+        .tab-button.active {
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+            background-color: #ffffff;
+            margin-bottom: -1px; /* Overlap border */
+        }
+        .tab-button i {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+
+        /* Content Sections (Vote Now & My Profile) */
+        .content-section {
+            padding: 30px;
+            background-color: #ffffff;
+        }
+        .content-section.hidden {
+            display: none;
+        }
+
+        /* Messages and Statuses */
+        .message-box {
+            text-align: center;
+            font-size: 1.1em;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .loading-message { background-color: #e0f7fa; color: #00796b; }
+        .error-message { background-color: #ffebee; color: #d32f2f; border: 1px solid #ef9a9a; }
+        .success-message { background-color: #e8f5e9; color: #388e3c; border: 1px solid #a5d6a7; }
+        .info-message { background-color: #e3f2fd; color: #1976d2; }
+        .logged-out-message { background-color: #fff8e1; color: #fbc02d; }
+        .already-voted-message { background-color: #e0f2f7; color: #0288d1; }
+
+        /* Election Info */
+        .election-info {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            color: #0056b3;
+            font-size: 1.05em;
+            border: 1px solid #d4e8ff;
+        }
+        .election-info p { margin: 5px 0; }
+        .election-info strong { color: #004085; }
+
+        /* Candidate Grid (Vote Section) */
+        .candidate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 10px 0;
+        }
+        .candidate-card {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        .candidate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .candidate-card img {
+            width: 100%;
+            height: 180px; /* Slightly adjusted height */
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid #eee;
+        }
+        .candidate-info {
+            padding: 15px 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Pushes button to bottom */
+        }
+        .candidate-info h3 {
+            margin-top: 0;
+            color: #0056b3;
+            font-size: 1.6em;
+            margin-bottom: 8px;
+        }
+        .candidate-info p {
+            margin: 4px 0;
+            font-size: 0.95em;
+            color: #555;
+        }
+        .candidate-info strong {
+            color: #333;
+        }
+        .platform-excerpt {
+            font-style: italic;
+            color: #666;
+            font-size: 0.88em;
+            margin-top: 10px;
+            text-align: left;
+            max-height: 80px; /* Limit height for summary */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            margin-bottom: 15px;
+        }
+        .vote-button {
+            display: block;
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .vote-button:hover:not(:disabled) {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+        .vote-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .vote-button .spinner {
+            border-color: rgba(255, 255, 255, 0.4);
+            border-top-color: #fff;
+        }
+
+        /* Profile Form Styling (reusing forms.css but specific overrides) */
+        .profile-form .form-group {
+            margin-bottom: 20px;
+        }
+        .profile-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        .profile-form input[type="text"],
+        .profile-form input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .profile-form input[type="email"]:disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .profile-form .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .profile-form .button-group button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .profile-form .button-group button:hover {
+            transform: translateY(-2px);
+        }
+        .profile-form .button-group button#save-profile-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .profile-form .button-group button#save-profile-button:hover {
+            background-color: #0056b3;
+        }
+        .profile-form .button-group button#cancel-button {
+            background-color: #6c757d;
+            color: white;
+        }
+        .profile-form .button-group button#cancel-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Welcome, Voter!</h1>
+            <p>Your portal for casting votes and managing your profile.</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" data-tab="vote-section">
+                <i class="fas fa-check-to-slot"></i> Vote Now
+            </button>
+            <button class="tab-button" data-tab="profile-section">
+                <i class="fas fa-user"></i> My Profile
+            </button>
+            <button class="tab-button" id="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+
+        <div class="content-section">
+            <div id="logged-out-section" class="message-box logged-out-message" style="display: none;">
+                You are not logged in as a voter. Please <a href="/login">Login</a> to continue.
+            </div>
+        </div>
+
+        <section id="vote-section" class="content-section">
+            <h2>Vote Now</h2>
+            <div class="election-info-container">
+                <p>Your Registered District: <span id="voter-district-display">Loading...</span></p>
+                <p>Election: <span id="election-info">Loading...</span></p>
+
+                <div class="form-group">
+                    <label for="election-type-select">Select Position to Vote For:</label>
+                    <select id="election-type-select" class="form-control">
+                        <option value="">Select Position</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="vote-loading-section" class="message-box loading-message" style="display: none;"></div>
+            <div id="vote-error-section" class="message-box error-message" style="display: none;"></div>
+            <div id="no-candidates-section" class="message-box info-message" style="display: none;"></div>
+            <div id="already-voted-section" class="message-box info-message" style="display: none;"></div>
+
+            <div id="candidate-list" class="candidate-grid">
+                </div>
+        </section>
+
+        <div id="profile-section" class="content-section hidden">
+            <h2>My Profile</h2>
+            <form id="voter-profile-form" class="profile-form">
+                <div class="form-group">
+                    <label for="profile-full-name">Full Name</label>
+                    <input type="text" id="profile-full-name" name="fullName" required
+                           pattern="[A-Za-z\s]{2,50}"
+                           title="Please enter your full name (2-50 characters, letters and spaces only)">
+                </div>
+
+                <div class="form-group">
+                    <label for="profile-email">Email (Cannot be changed)</label>
+                    <input type="email" id="profile-email" name="email" required disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="profile-district">District</label>
+                    <input type="text" id="profile-district" name="district" required
+                           pattern="[A-Za-z0-9\s-]{2,100}"
+                           title="Please enter your district (e.g., North District 1, 3rd Congressional District)">
+                </div>
+
+                <div class="form-group">
+                    <label for="profile-contact-number">Contact Number (Optional)</label>
+                    <input type="text" id="profile-contact-number" name="contactNumber"
+                           pattern="[0-9+\s-]{7,20}"
+                           title="Please enter a valid phone number (7-20 digits, spaces, hyphens, and + allowed)">
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" id="save-voter-profile-button">
+                        <span class="button-text">Save Profile</span>
+                        <div class="spinner" style="display: none;"></div>
+                    </button>
+                    </div>
+
+                <div id="profile-success-message" class="message-box success-message" style="display: none;"></div>
+                <div id="profile-error-message" class="message-box error-message" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+    <script type="module" src="/js/voter-profile.js"></script>
+</body>
+</html>

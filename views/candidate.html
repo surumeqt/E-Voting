@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Profile - E-Voting System</title>
+    <link rel="stylesheet" href="css/forms.css"> <style>
+        /* General Body and Container */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f7;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 800px; /* Adjust max-width for profile form */
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 30px; /* Added padding here directly */
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        /* Profile Form Styling */
+        .profile-form .form-group {
+            margin-bottom: 20px;
+        }
+        .profile-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.95em;
+        }
+        .profile-form input[type="text"],
+        .profile-form input[type="email"],
+        .profile-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .profile-form input[type="text"]:focus,
+        .profile-form input[type="email"]:focus,
+        .profile-form textarea:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        .profile-form input[type="email"]:disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        .profile-form textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Photo Upload */
+        .profile-photo-container {
+            text-align: center;
+            margin-bottom: 30px;
+            border: 2px dashed #a0d3ff;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f8fcff;
+        }
+        .profile-photo-container img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #007bff;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .profile-photo-container input[type="file"] {
+            display: block;
+            margin: 10px auto;
+            max-width: 250px;
+        }
+        .upload-status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .upload-status.success { color: #28a745; }
+        .upload-status.error { color: #dc3545; }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .button-group button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .button-group button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .button-group button#save-profile-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .button-group button#save-profile-button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        .button-group button#logout-button {
+            background-color: #dc3545;
+            color: white;
+        }
+        .button-group button#logout-button:hover {
+            background-color: #c82333;
+        }
+         .button-group button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Messages */
+        .message-box {
+            text-align: center;
+            font-size: 1em;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .loading-message { background-color: #e0f7fa; color: #00796b; }
+        .error-message { background-color: #ffebee; color: #d32f2f; border: 1px solid #ef9a9a; }
+        .success-message { background-color: #e8f5e9; color: #388e3c; border: 1px solid #a5d6a7; }
+        .logged-out-message { background-color: #fff8e1; color: #fbc02d; }
+
+
+        /* Spinner styles (from your forms.css or global CSS) */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Candidate Profile</h1>
+            <p>Manage your public profile and campaign information.</p>
+        </div>
+
+        <div id="logged-out-section" class="message-box logged-out-message" style="display: none;">
+            You are not logged in as a candidate. Please <a href="login.html">Login</a> to manage your profile.
+        </div>
+
+        <form id="candidate-profile-form" class="profile-form" style="display: none;">
+            <div class="profile-photo-container">
+                <img id="profile-photo-preview" src="https://via.placeholder.com/150?text=Upload+Photo" alt="Profile Photo">
+                <input type="file" id="profile-photo-upload" accept="image/*">
+                <p class="upload-status" id="photo-upload-status"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="profile-name">Candidate Name</label>
+                <input type="text" id="profile-name" name="name" required
+                       pattern="[A-Za-z\s.]{2,100}"
+                       title="Name should be 2-100 characters, letters, spaces, and periods only.">
+            </div>
+
+            <div class="form-group">
+                <label for="profile-email">Email (Cannot be changed)</label>
+                <input type="email" id="profile-email" name="email" required disabled>
+            </div>
+
+            <div class="form-group">
+                <label for="profile-district">District</label>
+                <input type="text" id="profile-district" name="district" required
+                       pattern="[A-Za-z0-9\s-]{2,100}"
+                       title="District should be 2-100 characters, letters, numbers, spaces, and hyphens.">
+            </div>
+
+            <div class="form-group">
+                <label for="profile-party">Party Affiliation</label>
+                <input type="text" id="profile-party" name="party" required
+                       pattern="[A-Za-z\s-]{2,100}"
+                       title="Party should be 2-100 characters, letters, spaces, and hyphens.">
+            </div>
+
+            <div class="form-group">
+                <label for="profile-position-select">Position Running For:</label>
+                <select id="profile-position-select" class="form-control" required>
+                    <option value="">Select Position</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="profile-running-mate">Running Mate (Optional)</label>
+                <input type="text" id="profile-running-mate" name="runningMateName"
+                       pattern="[A-Za-z\s.]{2,100}"
+                       title="Running Mate name should be 2-100 characters, letters, spaces, and periods only.">
+            </div>
+
+            <div class="form-group">
+                <label for="profile-platform">Campaign Platform</label>
+                <textarea id="profile-platform" name="platform" rows="8" required
+                          minlength="50" maxlength="1000"
+                          title="Platform should be between 50 and 1000 characters."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="profile-is-active">Active in Election</label>
+                <input type="checkbox" id="profile-is-active" name="isActive">
+                <small>Check this box to make your profile visible and eligible for votes.</small>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" id="save-profile-button">
+                    <span class="button-text">Save Profile</span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+                <button type="button" id="logout-button">Logout</button>
+            </div>
+
+            <div id="profile-success-message" class="message-box success-message" style="display: none;"></div>
+            <div id="profile-error-message" class="message-box error-message" style="display: none;"></div>
+            <div id="profile-loading-message" class="message-box loading-message">Loading profile...</div>
+        </form>
+    </div>
+    <script type="module" src="/js/candidate-profile.js"></script>
+</body>
+</html>

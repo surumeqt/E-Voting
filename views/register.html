@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Voting System</title>
+    <link rel="stylesheet" href="css/forms.css">
+</head>
+<body>
+    <div class="register-container" id="main-content">
+        <h2>Create Account</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="full-name">Full Name</label>
+                <input type="text" id="full-name" name="full-name" required
+                       title="Please enter your full name (2-50 characters, letters and spaces only)">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required
+                       title="Please enter a valid email address">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-input-container">
+                    <input type="password" id="password" name="password" required
+                           minlength="8"
+                           title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
+                    <button type="button" id="toggle-password" class="toggle-password" aria-label="Toggle password visibility">👁️</button>
+                </div>
+                <div class="password-requirements">
+                    <p>Password must contain:</p>
+                    <ul>
+                        <li id="length">At least 8 characters</li>
+                        <li id="uppercase">One uppercase letter</li>
+                        <li id="lowercase">One lowercase letter</li>
+                        <li id="number">One number</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+            </div>
+            <div class="form-group">
+                <label for="district">District</label>
+                <input type="text" id="district" name="district" required
+                       title="Please enter your district (letters, numbers, spaces, and hyphens allowed)">
+            </div>
+            <div class="form-group">
+                <label for="contact-number">Contact Number</label>
+                <input type="tel" id="contact-number" name="contact-number"
+                       title="Please enter your contact number (optional, e.g., 09123456789)">
+            </div>
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required>
+                    <option value="">Select Role</option>
+                    <option value="voter">Voter</option>
+                    <option value="candidate">Candidate</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit" id="register-button">
+                    <span class="button-text">Register</span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+            </div>
+        </form>
+        <div class="form-footer">
+            <p>Already have an account? <a href="/login">Login here</a></p>
+        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;"></div>
+    </div>
+    <div id="redirect-message" class="message-box" style="display:none;"></div>
+    <script type="module" src="/js/auth-redirect.js"></script>
+    <script type="module" src="/js/register.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Vote Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/admin.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <aside class="sidebar">
+            <div class="logo">Admin Panel</div>
+            <nav class="tabs">
+                <button class="tab-button active" data-tab="dashboard-section"><i class="fas fa-home"></i> Dashboard</button>
+                <button class="tab-button" data-tab="elections-section"><i class="fas fa-vote-yea"></i> Elections</button>
+                <button class="tab-button" data-tab="candidates-section"><i class="fas fa-user-tie"></i> Candidates</button>
+                <button class="tab-button" data-tab="voters-section"><i class="fas fa-users"></i> Voters</button>
+                <button class="tab-button" data-tab="results-section"><i class="fas fa-chart-bar"></i> Results</button>
+                </nav>
+            <button id="admin-logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </aside>
+
+        <main class="content">
+            <header class="header">
+                <h1>Welcome, Admin!</h1>
+                <p id="admin-greeting">Loading admin info...</p>
+            </header>
+
+            <div id="admin-loading-message" class="message-box loading-message" style="display: none;"></div>
+            <div id="admin-error-message" class="message-box error-message" style="display: none;"></div>
+            <div id="admin-success-message" class="message-box success-message" style="display: none;"></div>
+
+
+            <section id="dashboard-section" class="content-section">
+                <h2>Dashboard Overview</h2>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3>Total Voters</h3>
+                        <p id="total-voters"><i class="fas fa-spinner fa-spin"></i></p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Candidates</h3>
+                        <p id="total-candidates"><i class="fas fa-spinner fa-spin"></i></p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Elections</h3>
+                        <p id="active-elections"><i class="fas fa-spinner fa-spin"></i></p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Votes Cast</h3>
+                        <p id="total-votes-cast"><i class="fas fa-spinner fa-spin"></i></p>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <button class="action-button" data-tab-goto="elections-section"><i class="fas fa-plus"></i> New Election</button>
+                    <button class="action-button" data-tab-goto="candidates-section"><i class="fas fa-plus"></i> Add Candidate</button>
+                    <button class="action-button" data-tab-goto="voters-section"><i class="fas fa-search"></i> Manage Voters</button>
+                    <button class="action-button" data-tab-goto="results-section"><i class="fas fa-poll"></i> View Results</button>
+                </div>
+            </section>
+
+            <section id="elections-section" class="content-section hidden">
+                <h2>Elections Management</h2>
+                <button id="add-election-button" class="action-button"><i class="fas fa-plus"></i> Add New Election</button>
+                <div id="elections-list-container" class="data-list-container">
+                    <p class="loading-placeholder">Loading elections...</p>
+                </div>
+            </section>
+
+            <section id="candidates-section" class="content-section hidden">
+                <h2>Candidates Management</h2>
+                <button id="add-candidate-button" class="action-button"><i class="fas fa-plus"></i> Add New Candidate</button>
+                <div class="filter-controls">
+                    <select id="candidate-filter-position">
+                        <option value="">Filter by Position</option>
+                        </select>
+                    <input type="text" id="candidate-search-input" placeholder="Search by Name/District">
+                    <button id="candidate-search-button"><i class="fas fa-search"></i> Search</button>
+                </div>
+                <div id="candidates-list-container" class="data-list-container">
+                    <p class="loading-placeholder">Loading candidates...</p>
+                </div>
+            </section>
+
+            <section id="voters-section" class="content-section hidden">
+                <h2>Voters Management</h2>
+                <div class="filter-controls">
+                    <input type="text" id="voter-search-input" placeholder="Search by Email/Name/District">
+                    <button id="voter-search-button"><i class="fas fa-search"></i> Search</button>
+                </div>
+                <div id="voters-list-container" class="data-list-container">
+                    <p class="loading-placeholder">Loading voters...</p>
+                </div>
+            </section>
+
+            <section id="results-section" class="content-section hidden">
+                <h2>Election Results</h2>
+                <div id="results-filter">
+                    <select id="results-election-select">
+                        <option value="">Select Election</option>
+                        </select>
+                    <select id="results-position-select">
+                        <option value="">Select Position</option>
+                        </select>
+                </div>
+                <div id="results-display-container">
+                    <p class="info-message">Select an election and position to view results.</p>
+                </div>
+            </section>
+
+            <div id="logged-out-section" class="logged-out-container" style="display: none;">
+                <h2>Access Denied</h2>
+                <p>You are not logged in as an administrator or your session has expired.</p>
+                <button onclick="window.location.href='/login'">Go to Login</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/js/admin-profile.js"></script>
+</body>
+</html>
