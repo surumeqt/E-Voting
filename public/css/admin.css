@@ -1,5 +1,5 @@
 :root {
-    --primary-color: #007bff;
+    --primary-color: #141414;
     --primary-hover: #0056b3;
     --secondary-color: #6c757d;
     --secondary-hover: #5a6268;
@@ -11,7 +11,7 @@
     --card-bg: #ffffff;
     --border-color: #dee2e6;
     --text-color: #343a40;
-    --sidebar-bg: #343a40;
+    --sidebar-bg: #109e4e;
     --sidebar-text: #ffffff;
     --sidebar-active-bg: #0056b3;
 }
