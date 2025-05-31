@@ -1,6 +1,5 @@
-
 import { auth, db, storage } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, where, runTransaction, orderBy  } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
+import { doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, where, runTransaction, orderBy } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-storage.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js';
 
@@ -170,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.mainContainer.style.display = 'none';
                 elements.loggedOutSection.style.display = 'block';
                 displayMessage(elements.loggedOutSection.querySelector('p') || elements.loggedOutSection,
-                               'Access denied. Redirecting to login...', 'info', REDIRECT_DELAY);
+                    'Access denied. Redirecting to login...', 'info', REDIRECT_DELAY);
                 await new Promise(resolve => setTimeout(resolve, REDIRECT_DELAY));
                 window.location.href = '/login';
                 return false;
@@ -185,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.mainContainer.style.display = 'none';
             elements.loggedOutSection.style.display = 'block';
             displayMessage(elements.loggedOutSection.querySelector('p') || elements.loggedOutSection,
-                           'Error verifying session. Redirecting to login...', 'error', REDIRECT_DELAY);
+                'Error verifying session. Redirecting to login...', 'error', REDIRECT_DELAY);
             await new Promise(resolve => setTimeout(resolve, REDIRECT_DELAY));
             window.location.href = '/login';
             return false;
@@ -454,103 +453,102 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-// Make sure 'allCandidates' is declared appropriately, e.g., at the top of your module if it's global
-let allCandidates = [];
+    async function loadCandidates(filterPosition = '', searchTerm = '') {
+        elements.candidatesListContainer.innerHTML = '<p class="loading-placeholder">Loading candidates...</p>';
+        try {
+            const candidatesCollectionRef = collection(db, 'candidates');
+            const querySnapshot = await getDocs(candidatesCollectionRef);
 
-async function loadCandidates(filterPosition = '', searchTerm = '') {
-    elements.candidatesListContainer.innerHTML = '<p class="loading-placeholder">Loading candidates...</p>';
-    try {
-        // ALWAYS START WITH A FRESH COLLECTION REFERENCE
-        const candidatesCollectionRef = collection(db, 'candidates');
+            // Populate the array with the fetched data, ensuring fallbacks for potentially missing fields
+            allCandidates = querySnapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data(),
+                position: doc.data().position || '', // Ensure position exists
+                ballotOrder: doc.data().ballotOrder || 999 // Default to high number if not set
+            }));
 
-        // If you were applying Firestore-side filters:
-        let firestoreQuery = candidatesCollectionRef;
-        // Example: if you wanted to filter by position BEFORE fetching all
-        // if (filterPosition) {
-        //     firestoreQuery = query(firestoreQuery, where('position', '==', filterPosition));
-        // }
-        // Note: Firestore doesn't support 'includes' for search terms, so 'searchTerm' must be client-side filtered.
+            // Perform client-side filtering
+            let filtered = allCandidates;
 
-        const querySnapshot = await getDocs(firestoreQuery); // Execute getDocs on the query/collection reference
-
-        // Now populate the array with the fetched data
-        allCandidates = querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
-
-        // Perform client-side filtering and sorting on 'allCandidates' array
-        let filtered = allCandidates;
-
-        if (filterPosition) {
-            filtered = filtered.filter(c => c.position === filterPosition);
-        }
-        if (searchTerm) {
-            const lowerSearchTerm = searchTerm.toLowerCase();
-            filtered = filtered.filter(c =>
-                c.name.toLowerCase().includes(lowerSearchTerm) ||
-                (c.district && c.district.toLowerCase().includes(lowerSearchTerm)) ||
-                (c.party && c.party.toLowerCase().includes(lowerSearchTerm))
-            );
-        }
-
-        elements.candidatesListContainer.innerHTML = '';
-        if (filtered.length === 0) {
-            elements.candidatesListContainer.innerHTML = '<p class="no-data-message">No candidates found matching your criteria.</p>';
-            return;
-        }
-
-        filtered.sort((a, b) => {
-            if (a.position === b.position) {
-                return (a.ballotOrder || 999) - (b.ballotOrder || 999);
+            if (filterPosition) {
+                filtered = filtered.filter(c => c.position === filterPosition);
             }
-            return a.position.localeCompare(b.position);
-        });
+            if (searchTerm) {
+                const lowerSearchTerm = searchTerm.toLowerCase();
+                filtered = filtered.filter(c =>
+                    (c.name && c.name.toLowerCase().includes(lowerSearchTerm)) ||
+                    (c.district && c.district.toLowerCase().includes(lowerSearchTerm)) ||
+                    (c.party && c.party.toLowerCase().includes(lowerSearchTerm))
+                );
+            }
 
-        filtered.forEach(candidate => {
-            const photoSrc = candidate.photoURL && candidate.photoURL.startsWith('http')
-                ? candidate.photoURL
-                : 'https://via.placeholder.com/100?text=No+Photo';
+            elements.candidatesListContainer.innerHTML = '';
+            if (filtered.length === 0) {
+                elements.candidatesListContainer.innerHTML = '<p class="no-data-message">No candidates found matching your criteria.</p>';
+                return;
+            }
 
-            const candidateCard = document.createElement('div');
-            candidateCard.classList.add('data-card');
-            candidateCard.innerHTML = `
-                <img src="${photoSrc}" alt="${candidate.name}'s photo" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">
-                <div class="info">
-                    <h3>${candidate.name} (${candidate.party || 'Independent'})</h3>
-                    <p><strong>Position:</strong> ${candidate.position || 'N/A'}</p>
-                    <p><strong>District:</strong> ${candidate.district || 'N/A'}</p>
-                    <p><strong>Active:</strong> ${candidate.isActive ? 'Yes' : 'No'}</p>
-                    <p><strong>Votes:</strong> ${candidate.votes || 0}</p>
-                </div>
-                <div class="actions">
-                    <button class="edit-button" data-uid="${candidate.uid}">Edit</button>
-                    <button class="delete-button" data-uid="${candidate.uid}">Delete</button>
-                </div>
-            `;
-            elements.candidatesListContainer.appendChild(candidateCard);
-        });
+            // Safe sorting with fallbacks
+            filtered.sort((a, b) => {
+                // Ensure positions exist before comparing
+                const posA = a.position || '';
+                const posB = b.position || '';
 
-        elements.candidatesListContainer.querySelectorAll('.edit-button').forEach(button => {
-            button.addEventListener('click', (e) => editCandidate(e.target.dataset.uid));
-        });
-        elements.candidatesListContainer.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', (e) => deleteCandidate(e.target.dataset.uid, e.target));
-        });
+                if (posA === posB) {
+                    return (a.ballotOrder || 999) - (b.ballotOrder || 999);
+                }
+                return posA.localeCompare(posB);
+            });
 
-    } catch (error) {
-        console.error('Error loading candidates:', error);
-        elements.candidatesListContainer.innerHTML = '<p class="error-message">Failed to load candidates.</p>';
-        displayMessage(elements.adminErrorMessage, 'Failed to load candidates.', 'error');
+            filtered.forEach(candidate => {
+                const photoSrc = candidate.photoURL && candidate.photoURL.startsWith('http')
+                    ? candidate.photoURL
+                    : 'https://via.placeholder.com/100?text=No+Photo';
+
+                const candidateCard = document.createElement('div');
+                candidateCard.classList.add('data-card');
+                candidateCard.innerHTML = `
+                    <img src="${photoSrc}" alt="${candidate.name}'s photo" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">
+                    <div class="info">
+                        <h3>${candidate.name || 'Unknown'} (${candidate.party || 'Independent'})</h3>
+                        <p><strong>Position:</strong> ${candidate.position || 'N/A'}</p>
+                        <p><strong>District:</strong> ${candidate.district || 'N/A'}</p>
+                        <p><strong>Active:</strong> ${candidate.isActive ? 'Yes' : 'No'}</p>
+                        <p><strong>Votes:</strong> ${candidate.votes || 0}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="edit-button" data-uid="${candidate.uid}">Edit</button>
+                        <button class="delete-button" data-uid="${candidate.uid}">Delete</button>
+                    </div>
+                `;
+                elements.candidatesListContainer.appendChild(candidateCard);
+            });
+
+            elements.candidatesListContainer.querySelectorAll('.edit-button').forEach(button => {
+                button.addEventListener('click', (e) => editCandidate(e.target.dataset.uid));
+            });
+            elements.candidatesListContainer.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', (e) => deleteCandidate(e.target.dataset.uid, e.target));
+            });
+
+        } catch (error) {
+            console.error('Error loading candidates:', error);
+            elements.candidatesListContainer.innerHTML = '<p class="error-message">Failed to load candidates.</p>';
+            displayMessage(elements.adminErrorMessage, 'Failed to load candidates.', 'error');
+        }
     }
-}
 
     async function populateCandidateFilterPositions() {
-        if (!elements.candidateFilterPosition.options.length > 1) {
+        // Only repopulate if there's only the default option, or if elections have changed
+        if (elements.candidateFilterPosition.options.length <= 1) {
             const positions = new Set();
+            // If allElections is not loaded, fetch them to get positions
             if (allElections.length === 0) {
-                 const electionsSnapshot = await getDocs(collection(db, 'elections'));
-                 electionsSnapshot.docs.forEach(doc => {
-                     const data = doc.data();
-                     if (data.positions) data.positions.forEach(p => positions.add(p));
-                 });
+                const electionsSnapshot = await getDocs(collection(db, 'elections'));
+                electionsSnapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    if (data.positions) data.positions.forEach(p => positions.add(p));
+                });
             } else {
                 allElections.forEach(election => {
                     if (election.positions) election.positions.forEach(p => positions.add(p));
@@ -585,39 +583,30 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
             'Add New Candidate',
             `
             <div class="form-group">
-                <label for="candidate-name">Full Name:</label>
+                <label for="candidate-name">Name:</label>
                 <input type="text" id="candidate-name" required>
-            </div>
-            <div class="form-group">
-                <label for="candidate-party">Party:</label>
-                <input type="text" id="candidate-party" placeholder="e.g., Liberal Party">
             </div>
             <div class="form-group">
                 <label for="candidate-position">Position:</label>
                 <select id="candidate-position" required>
-                    <option value="">Select Position</option>
+                    <option value="">Select a Position</option>
                     </select>
             </div>
             <div class="form-group">
-                <label for="candidate-district">District:</label>
-                <input type="text" id="candidate-district" required>
+                <label for="candidate-district">District (Optional):</label>
+                <input type="text" id="candidate-district">
             </div>
             <div class="form-group">
-                <label for="candidate-ballot-order">Ballot Order:</label>
-                <input type="number" id="candidate-ballot-order" min="1" placeholder="e.g., 1, 2">
+                <label for="candidate-party">Party (Optional):</label>
+                <input type="text" id="candidate-party">
             </div>
             <div class="form-group">
-                <label for="candidate-running-mate">Running Mate (Optional):</label>
-                <input type="text" id="candidate-running-mate">
-            </div>
-            <div class="form-group">
-                <label for="candidate-platform">Platform/Manifesto:</label>
-                <textarea id="candidate-platform" rows="4"></textarea>
+                <label for="candidate-ballot-order">Ballot Order (Optional):</label>
+                <input type="number" id="candidate-ballot-order" min="1">
             </div>
             <div class="form-group">
                 <label for="candidate-photo">Photo:</label>
                 <input type="file" id="candidate-photo" accept="image/*">
-                <img id="photo-preview" class="image-preview" src="#" alt="Photo Preview" style="display: none;">
             </div>
             <div class="form-group">
                 <input type="checkbox" id="candidate-is-active" checked>
@@ -626,70 +615,60 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
             `,
             async (e) => {
                 const name = document.getElementById('candidate-name').value.trim();
-                const party = document.getElementById('candidate-party').value.trim() || 'Independent';
                 const position = document.getElementById('candidate-position').value;
                 const district = document.getElementById('candidate-district').value.trim();
-                const ballotOrder = parseInt(document.getElementById('candidate-ballot-order').value) || 0;
-                const runningMateName = document.getElementById('candidate-running-mate').value.trim();
-                const platform = document.getElementById('candidate-platform').value.trim();
-                const isActive = document.getElementById('candidate-is-active').checked;
+                const party = document.getElementById('candidate-party').value.trim();
+                const ballotOrder = parseInt(document.getElementById('candidate-ballot-order').value) || null;
                 const photoFile = document.getElementById('candidate-photo').files[0];
+                const isActive = document.getElementById('candidate-is-active').checked;
 
-                if (!name || !position || !district) {
-                    throw new Error('Please fill all required fields: Full Name, Position, District.');
+                if (!name || !position) {
+                    throw new Error('Please fill all required fields: Name and Position.');
                 }
 
                 let photoURL = '';
                 if (photoFile) {
                     displayMessage(elements.adminLoadingMessage, 'Uploading photo...', 'loading', 0);
-                    const photoRef = ref(storage, `candidate_photos/${Date.now()}_${photoFile.name}`);
-                    await uploadBytes(photoRef, photoFile);
-                    photoURL = await getDownloadURL(photoRef);
-                    displayMessage(elements.adminLoadingMessage, '', 'loading', 0);
+                    const storageRef = ref(storage, `candidate_photos/${Date.now()}_${photoFile.name}`);
+                    const snapshot = await uploadBytes(storageRef, photoFile);
+                    photoURL = await getDownloadURL(snapshot.ref);
+                    displayMessage(elements.adminLoadingMessage, '', 'loading'); // Clear loading message
                 }
 
                 await addDoc(collection(db, 'candidates'), {
                     name,
-                    party,
                     position,
-                    district,
+                    district: district || null,
+                    party: party || null,
                     ballotOrder,
-                    runningMateName: runningMateName || null,
-                    platform: platform || null,
+                    photoURL,
                     isActive,
-                    photoURL: photoURL || null,
-                    votes: 0,
+                    votes: 0, // Initialize votes to 0
                     createdAt: new Date().toISOString()
                 });
                 loadCandidates();
             },
-            (modal) => {
+            async (modal) => {
+                // Populate positions dropdown when modal opens
                 const positionSelect = modal.querySelector('#candidate-position');
+                positionSelect.innerHTML = '<option value="">Select a Position</option>';
                 const positions = new Set();
-                allElections.forEach(election => {
-                    if (election.positions) election.positions.forEach(p => positions.add(p));
-                });
+                if (allElections.length === 0) { // If elections not loaded, fetch them
+                    const electionsSnapshot = await getDocs(collection(db, 'elections'));
+                    electionsSnapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        if (data.positions) data.positions.forEach(p => positions.add(p));
+                    });
+                } else {
+                    allElections.forEach(election => {
+                        if (election.positions) election.positions.forEach(p => positions.add(p));
+                    });
+                }
                 Array.from(positions).sort().forEach(position => {
                     const option = document.createElement('option');
                     option.value = position;
                     option.textContent = position;
                     positionSelect.appendChild(option);
-                });
-
-                const photoInput = modal.querySelector('#candidate-photo');
-                const photoPreview = modal.querySelector('#photo-preview');
-                photoInput.addEventListener('change', (event) => {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            photoPreview.src = e.target.result;
-                            photoPreview.style.display = 'block';
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        photoPreview.style.display = 'none';
-                    }
                 });
             }
         );
@@ -706,40 +685,31 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
             `Edit Candidate: ${candidate.name}`,
             `
             <div class="form-group">
-                <label for="edit-candidate-name">Full Name:</label>
+                <label for="edit-candidate-name">Name:</label>
                 <input type="text" id="edit-candidate-name" value="${candidate.name}" required>
-            </div>
-            <div class="form-group">
-                <label for="edit-candidate-party">Party:</label>
-                <input type="text" id="edit-candidate-party" value="${candidate.party || ''}" placeholder="e.g., Liberal Party">
             </div>
             <div class="form-group">
                 <label for="edit-candidate-position">Position:</label>
                 <select id="edit-candidate-position" required>
-                    <option value="">Select Position</option>
+                    <option value="">Select a Position</option>
                     </select>
             </div>
             <div class="form-group">
-                <label for="edit-candidate-district">District:</label>
-                <input type="text" id="edit-candidate-district" value="${candidate.district || ''}" required>
+                <label for="edit-candidate-district">District (Optional):</label>
+                <input type="text" id="edit-candidate-district" value="${candidate.district || ''}">
             </div>
             <div class="form-group">
-                <label for="edit-candidate-ballot-order">Ballot Order:</label>
-                <input type="number" id="edit-candidate-ballot-order" min="1" value="${candidate.ballotOrder || ''}" placeholder="e.g., 1, 2">
+                <label for="edit-candidate-party">Party (Optional):</label>
+                <input type="text" id="edit-candidate-party" value="${candidate.party || ''}">
             </div>
             <div class="form-group">
-                <label for="edit-candidate-running-mate">Running Mate (Optional):</label>
-                <input type="text" id="edit-candidate-running-mate" value="${candidate.runningMateName || ''}">
+                <label for="edit-candidate-ballot-order">Ballot Order (Optional):</label>
+                <input type="number" id="edit-candidate-ballot-order" min="1" value="${candidate.ballotOrder || ''}">
             </div>
             <div class="form-group">
-                <label for="edit-candidate-platform">Platform/Manifesto:</label>
-                <textarea id="edit-candidate-platform" rows="4">${candidate.platform || ''}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="edit-candidate-photo">Photo:</label>
+                <label for="edit-candidate-photo">Photo (leave blank to keep current):</label>
                 <input type="file" id="edit-candidate-photo" accept="image/*">
-                <img id="edit-photo-preview" class="image-preview" src="${candidate.photoURL || '#'}" alt="Photo Preview" style="${candidate.photoURL ? 'display: block;' : 'display: none;'}">
-                ${candidate.photoURL ? `<small>Current photo. Upload new to change.</small>` : `<small>No current photo.</small>`}
+                ${candidate.photoURL ? `<img src="${candidate.photoURL}" alt="Current Photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; margin-top: 5px;">` : ''}
             </div>
             <div class="form-group">
                 <input type="checkbox" id="edit-candidate-is-active" ${candidate.isActive ? 'checked' : ''}>
@@ -748,74 +718,61 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
             `,
             async (e) => {
                 const name = document.getElementById('edit-candidate-name').value.trim();
-                const party = document.getElementById('edit-candidate-party').value.trim() || 'Independent';
                 const position = document.getElementById('edit-candidate-position').value;
                 const district = document.getElementById('edit-candidate-district').value.trim();
-                const ballotOrder = parseInt(document.getElementById('edit-candidate-ballot-order').value) || 0;
-                const runningMateName = document.getElementById('edit-candidate-running-mate').value.trim();
-                const platform = document.getElementById('edit-candidate-platform').value.trim();
-                const isActive = document.getElementById('edit-candidate-is-active').checked;
+                const party = document.getElementById('edit-candidate-party').value.trim();
+                const ballotOrder = parseInt(document.getElementById('edit-candidate-ballot-order').value) || null;
                 const photoFile = document.getElementById('edit-candidate-photo').files[0];
+                const isActive = document.getElementById('edit-candidate-is-active').checked;
 
-                if (!name || !position || !district) {
-                    throw new Error('Please fill all required fields: Full Name, Position, District.');
+                if (!name || !position) {
+                    throw new Error('Please fill all required fields: Name and Position.');
                 }
 
-                let photoURL = candidate.photoURL || null;
+                let newPhotoURL = candidate.photoURL;
                 if (photoFile) {
                     displayMessage(elements.adminLoadingMessage, 'Uploading new photo...', 'loading', 0);
-                    const photoRef = ref(storage, `candidate_photos/${Date.now()}_${photoFile.name}`);
-                    await uploadBytes(photoRef, photoFile);
-                    photoURL = await getDownloadURL(photoRef);
-                    displayMessage(elements.adminLoadingMessage, '', 'loading', 0);
+                    const storageRef = ref(storage, `candidate_photos/${Date.now()}_${photoFile.name}`);
+                    const snapshot = await uploadBytes(storageRef, photoFile);
+                    newPhotoURL = await getDownloadURL(snapshot.ref);
+                    displayMessage(elements.adminLoadingMessage, '', 'loading'); // Clear loading message
                 }
 
                 await updateDoc(doc(db, 'candidates', uid), {
                     name,
-                    party,
                     position,
-                    district,
+                    district: district || null,
+                    party: party || null,
                     ballotOrder,
-                    runningMateName: runningMateName || null,
-                    platform: platform || null,
+                    photoURL: newPhotoURL,
                     isActive,
-                    photoURL: photoURL,
                     lastUpdated: new Date().toISOString()
                 });
                 loadCandidates();
             },
-            (modal) => {
+            async (modal) => {
+                // Populate positions dropdown when modal opens, and set current value
                 const positionSelect = modal.querySelector('#edit-candidate-position');
+                positionSelect.innerHTML = '<option value="">Select a Position</option>';
                 const positions = new Set();
-                allElections.forEach(election => {
-                    if (election.positions) election.positions.forEach(p => positions.add(p));
-                });
-                Array.from(positions).sort().forEach(pos => {
+                if (allElections.length === 0) { // If elections not loaded, fetch them
+                    const electionsSnapshot = await getDocs(collection(db, 'elections'));
+                    electionsSnapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        if (data.positions) data.positions.forEach(p => positions.add(p));
+                    });
+                } else {
+                    allElections.forEach(election => {
+                        if (election.positions) election.positions.forEach(p => positions.add(p));
+                    });
+                }
+                Array.from(positions).sort().forEach(p => {
                     const option = document.createElement('option');
-                    option.value = pos;
-                    option.textContent = pos;
+                    option.value = p;
+                    option.textContent = p;
                     positionSelect.appendChild(option);
                 });
-                if (candidate.position) {
-                    positionSelect.value = candidate.position;
-                }
-
-                const photoInput = modal.querySelector('#edit-candidate-photo');
-                const photoPreview = modal.querySelector('#edit-photo-preview');
-                photoInput.addEventListener('change', (event) => {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            photoPreview.src = e.target.result;
-                            photoPreview.style.display = 'block';
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        photoPreview.src = candidate.photoURL || '#';
-                        photoPreview.style.display = candidate.photoURL ? 'block' : 'none';
-                    }
-                });
+                positionSelect.value = candidate.position || '';
             }
         );
     }
@@ -830,15 +787,6 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
         buttonElement.innerHTML = 'Deleting... <i class="fas fa-spinner fa-spin"></i>';
 
         try {
-            const candidate = allCandidates.find(c => c.uid === uid);
-            if (candidate && candidate.photoURL) {
-                const photoRef = ref(storage, candidate.photoURL);
-                try {
-                } catch (storageError) {
-                    console.warn("Could not delete candidate photo from storage (might not exist or permission issue):", storageError.message);
-                }
-            }
-
             await deleteDoc(doc(db, 'candidates', uid));
             displayMessage(elements.adminSuccessMessage, 'Candidate deleted successfully!', 'success');
             loadCandidates();
@@ -851,25 +799,44 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
         }
     }
 
+    // Initial load of dashboard stats and the first tab when the page loads
+    // This assumes 'dashboard-section' is the default active tab.
+    document.querySelector('.tab-button[data-tab="dashboard-section"]').click();
 
 
+    // Event listener for logout button
+    elements.logoutButton.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+            // Optionally, clear local session data or redirect to login page
+            window.location.href = '/login'; // Redirect to login page after logout
+        } catch (error) {
+            console.error('Error signing out:', error);
+            displayMessage(elements.adminErrorMessage, `Logout failed: ${error.message}`, 'error');
+        }
+    });
+
+    // Placeholder functions for sections not fully implemented in the snippet
     async function loadVoters(searchTerm = '') {
         elements.votersListContainer.innerHTML = '<p class="loading-placeholder">Loading voters...</p>';
         try {
-            const votersSnapshot = await getDocs(collection(db, 'users'));
-            allVoters = votersSnapshot.docs
-                .filter(doc => doc.data().role === 'voter')
-                .map(doc => ({ uid: doc.id, ...doc.data() }));
+            let votersQuery = collection(db, 'users');
+            if (searchTerm) {
+                // Firestore doesn't support substring search directly on queries.
+                // For robust search, you'd typically use a dedicated search service (like Algolia or a server-side index).
+                // For simple cases, you might fetch all and filter client-side, but be mindful of data size.
+                // For this example, let's assume we fetch all and filter by display name/email.
+                votersQuery = query(votersQuery, orderBy('displayName')); // Order by something if you filter client-side
+            }
+            const votersSnapshot = await getDocs(votersQuery);
+            allVoters = votersSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
 
             let filteredVoters = allVoters;
-
             if (searchTerm) {
                 const lowerSearchTerm = searchTerm.toLowerCase();
-                filteredVoters = filteredVoters.filter(voter =>
-                    (voter.fullName && voter.fullName.toLowerCase().includes(lowerSearchTerm)) ||
-                    (voter.email && voter.email.toLowerCase().includes(lowerSearchTerm)) ||
-                    (voter.district && voter.district.toLowerCase().includes(lowerSearchTerm)) ||
-                    (voter.contactNumber && voter.contactNumber.toLowerCase().includes(lowerSearchTerm))
+                filteredVoters = allVoters.filter(voter =>
+                    (voter.displayName && voter.displayName.toLowerCase().includes(lowerSearchTerm)) ||
+                    (voter.email && voter.email.toLowerCase().includes(lowerSearchTerm))
                 );
             }
 
@@ -884,30 +851,16 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
                 voterCard.classList.add('data-card');
                 voterCard.innerHTML = `
                     <div class="info">
-                        <h3>${voter.fullName || 'N/A'}</h3>
+                        <h3>${voter.displayName || 'N/A'}</h3>
                         <p><strong>Email:</strong> ${voter.email || 'N/A'}</p>
-                        <p><strong>District:</strong> ${voter.district || 'N/A'}</p>
-                        <p><strong>Contact:</strong> ${voter.contactNumber || 'N/A'}</p>
                         <p><strong>Registered:</strong> ${voter.createdAt ? new Date(voter.createdAt).toLocaleDateString() : 'N/A'}</p>
-                        <p><strong>Voted Positions:</strong> ${Object.keys(voter.votes?.[CURRENT_ELECTION_ID] || {}).filter(key => key.startsWith('votedCandidateId_')).map(key => key.replace('votedCandidateId_', '')).join(', ') || 'None'}</p>
+                        <p><strong>Role:</strong> ${voter.role || 'user'}</p>
+                        <p><strong>Has Voted:</strong> ${voter.hasVoted ? 'Yes' : 'No'}</p>
                     </div>
                     <div class="actions">
-                        <button class="edit-button" data-uid="${voter.uid}">Edit</button>
-                        <button class="reset-vote-button" data-uid="${voter.uid}">Reset Vote</button>
-                        <button class="delete-button" data-uid="${voter.uid}">Delete</button>
-                    </div>
+                        </div>
                 `;
                 elements.votersListContainer.appendChild(voterCard);
-            });
-
-            elements.votersListContainer.querySelectorAll('.edit-button').forEach(button => {
-                button.addEventListener('click', (e) => editVoter(e.target.dataset.uid));
-            });
-            elements.votersListContainer.querySelectorAll('.reset-vote-button').forEach(button => {
-                button.addEventListener('click', (e) => resetVoterVote(e.target.dataset.uid, e.target));
-            });
-            elements.votersListContainer.querySelectorAll('.delete-button').forEach(button => {
-                button.addEventListener('click', (e) => deleteVoter(e.target.dataset.uid, e.target));
             });
 
         } catch (error) {
@@ -926,249 +879,102 @@ async function loadCandidates(filterPosition = '', searchTerm = '') {
         }
     });
 
-    async function editVoter(uid) {
-        const voter = allVoters.find(v => v.uid === uid);
-        if (!voter) {
-            displayMessage(elements.adminErrorMessage, 'Voter not found!', 'error');
-            return;
-        }
-
-        createFormModal(
-            `Edit Voter: ${voter.fullName || voter.email}`,
-            `
-            <div class="form-group">
-                <label for="edit-voter-full-name">Full Name:</label>
-                <input type="text" id="edit-voter-full-name" value="${voter.fullName || ''}" required>
-            </div>
-            <div class="form-group">
-                <label for="edit-voter-email">Email:</label>
-                <input type="email" id="edit-voter-email" value="${voter.email || ''}" disabled> </div>
-            <div class="form-group">
-                <label for="edit-voter-district">District:</label>
-                <input type="text" id="edit-voter-district" value="${voter.district || ''}" required>
-            </div>
-            <div class="form-group">
-                <label for="edit-voter-contact-number">Contact Number:</label>
-                <input type="text" id="edit-voter-contact-number" value="${voter.contactNumber || ''}">
-            </div>
-            `,
-            async (e) => {
-                const fullName = document.getElementById('edit-voter-full-name').value.trim();
-                const district = document.getElementById('edit-voter-district').value.trim();
-                const contactNumber = document.getElementById('edit-voter-contact-number').value.trim() || null;
-
-                if (!fullName || !district) {
-                    throw new Error('Full Name and District are required.');
-                }
-
-                await updateDoc(doc(db, 'users', uid), {
-                    fullName,
-                    district,
-                    contactNumber,
-                    lastUpdated: new Date().toISOString()
-                });
-                loadVoters();
-            }
-        );
-    }
-
-    async function resetVoterVote(uid, buttonElement) {
-        if (!confirm('Are you sure you want to RESET this voter\'s votes for the CURRENT ELECTION? This action should be used with extreme caution and has audit implications.')) {
-            return;
-        }
-
-        const originalText = buttonElement.textContent;
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = 'Resetting... <i class="fas fa-spinner fa-spin"></i>';
-
-        try {
-            await runTransaction(db, async (transaction) => {
-                const voterRef = doc(db, 'users', uid);
-                const voterDoc = await transaction.get(voterRef);
-
-                if (!voterDoc.exists()) {
-                    throw new Error('Voter not found.');
-                }
-
-                const voterData = voterDoc.data();
-                const currentElectionVotes = voterData.votes?.[CURRENT_ELECTION_ID];
-
-                if (currentElectionVotes) {
-                    for (const key in currentElectionVotes) {
-                        if (key.startsWith('votedCandidateId_')) {
-                            const position = key.replace('votedCandidateId_', '');
-                            const votedCandidateId = currentElectionVotes[key];
-
-                            if (votedCandidateId) {
-                                const candidateRef = doc(db, 'candidates', votedCandidateId);
-                                const candidateDoc = await transaction.get(candidateRef);
-                                if (candidateDoc.exists()) {
-                                    const candidateData = candidateDoc.data();
-                                    const newVotes = Math.max(0, (candidateData.votes || 0) - 1);
-                                    transaction.update(candidateRef, { votes: newVotes });
-                                    console.log(`Decremented vote for candidate ${votedCandidateId} (position ${position})`);
-                                }
-                            }
-                        }
-                    }
-
-                    const updatedVotes = { ...voterData.votes };
-                    delete updatedVotes[CURRENT_ELECTION_ID];
-                    transaction.update(voterRef, { votes: updatedVotes });
-                    console.log(`Voter ${uid} votes for ${CURRENT_ELECTION_ID} reset.`);
-                } else {
-                    console.log(`Voter ${uid} had no votes for ${CURRENT_ELECTION_ID} to reset.`);
-                }
-            });
-
-            displayMessage(elements.adminSuccessMessage, 'Voter votes reset successfully!', 'success');
-            loadVoters();
-        } catch (error) {
-            console.error('Error resetting voter vote:', error);
-            displayMessage(elements.adminErrorMessage, `Failed to reset vote: ${error.message}`, 'error');
-        } finally {
-            buttonElement.disabled = false;
-            buttonElement.textContent = originalText;
-        }
-    }
-
-
-    async function deleteVoter(uid, buttonElement) {
-        if (!confirm('Are you sure you want to delete this voter? This action cannot be undone.')) {
-            return;
-        }
-
-        const originalText = buttonElement.textContent;
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = 'Deleting... <i class="fas fa-spinner fa-spin"></i>';
-
-        try {
-            await deleteDoc(doc(db, 'users', uid));
-            displayMessage(elements.adminSuccessMessage, 'Voter deleted successfully!', 'success');
-            loadVoters();
-        } catch (error) {
-            console.error('Error deleting voter:', error);
-            displayMessage(elements.adminErrorMessage, `Failed to delete voter: ${error.message}`, 'error');
-        } finally {
-            buttonElement.disabled = false;
-            buttonElement.textContent = originalText;
-        }
-    }
-
-
-
     async function populateResultsElectionSelect() {
+        elements.resultsElectionSelect.innerHTML = '<option value="">Select an Election</option>';
         if (allElections.length === 0) {
             const electionsSnapshot = await getDocs(collection(db, 'elections'));
             allElections = electionsSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
         }
-
-        elements.resultsElectionSelect.innerHTML = '<option value="">Select Election</option>';
-        allElections.sort((a,b) => a.name.localeCompare(b.name)).forEach(election => {
+        allElections.sort((a, b) => (new Date(b.createdAt || 0)) - (new Date(a.createdAt || 0))); // Sort by creation date
+        allElections.forEach(election => {
             const option = document.createElement('option');
             option.value = election.uid;
             option.textContent = election.name;
             elements.resultsElectionSelect.appendChild(option);
         });
-        elements.resultsPositionSelect.innerHTML = '<option value="">Select Position</option>';
     }
 
     elements.resultsElectionSelect.addEventListener('change', () => {
-        const selectedElectionId = elements.resultsElectionSelect.value;
-        elements.resultsPositionSelect.innerHTML = '<option value="">Select Position</option>';
+        const selectedElectionUid = elements.resultsElectionSelect.value;
+        populateResultsPositionSelect(selectedElectionUid);
         elements.resultsDisplayContainer.innerHTML = '<p class="info-message">Select a position to view results.</p>';
-
-        if (selectedElectionId) {
-            const selectedElection = allElections.find(e => e.uid === selectedElectionId);
-            if (selectedElection && selectedElection.positions) {
-                selectedElection.positions.sort().forEach(position => {
-                    const option = document.createElement('option');
-                    option.value = position;
-                    option.textContent = position;
-                    elements.resultsPositionSelect.appendChild(option);
-                });
-            }
-        }
     });
 
+    async function populateResultsPositionSelect(electionUid) {
+        elements.resultsPositionSelect.innerHTML = '<option value="">Select a Position</option>';
+        elements.resultsPositionSelect.disabled = true;
+
+        if (!electionUid) {
+            return;
+        }
+
+        const election = allElections.find(e => e.uid === electionUid);
+        if (election && election.positions && election.positions.length > 0) {
+            election.positions.sort().forEach(position => {
+                const option = document.createElement('option');
+                option.value = position;
+                option.textContent = position;
+                elements.resultsPositionSelect.appendChild(option);
+            });
+            elements.resultsPositionSelect.disabled = false;
+        } else {
+            displayMessage(elements.adminErrorMessage, 'No positions found for this election.', 'error');
+        }
+    }
+
     elements.resultsPositionSelect.addEventListener('change', () => {
-        const selectedElectionId = elements.resultsElectionSelect.value;
+        const selectedElectionUid = elements.resultsElectionSelect.value;
         const selectedPosition = elements.resultsPositionSelect.value;
-        if (selectedElectionId && selectedPosition) {
-            displayResults(selectedElectionId, selectedPosition);
+        if (selectedElectionUid && selectedPosition) {
+            displayElectionResults(selectedElectionUid, selectedPosition);
         } else {
             elements.resultsDisplayContainer.innerHTML = '<p class="info-message">Select an election and position to view results.</p>';
         }
     });
 
-    async function displayResults(electionId, position) {
+    async function displayElectionResults(electionUid, position) {
         elements.resultsDisplayContainer.innerHTML = '<p class="loading-placeholder">Loading results...</p>';
         try {
             const candidatesQuery = query(
                 collection(db, 'candidates'),
-                where('position', '==', position)
+                where('position', '==', position),
+                where('isActive', '==', true), // Only consider active candidates for results
+                orderBy('votes', 'desc') // Order by votes in descending order
             );
             const candidatesSnapshot = await getDocs(candidatesQuery);
-            const candidatesForPosition = candidatesSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
 
-
-            candidatesForPosition.sort((a, b) => (b.votes || 0) - (a.votes || 0));
-
-            let resultsHtml = '<h3>Results for: ' + position + '</h3>';
-            if (candidatesForPosition.length === 0) {
-                resultsHtml += '<p class="no-data-message">No candidates found for this position or no votes cast yet.</p>';
+            let resultsHtml = `<h4>Results for ${position}</h4>`;
+            if (candidatesSnapshot.empty) {
+                resultsHtml += '<p class="no-data-message">No active candidates or votes for this position.</p>';
             } else {
-                resultsHtml += '<table class="results-table">';
-                resultsHtml += `
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Candidate</th>
-                            <th>Party</th>
-                            <th>District</th>
-                            <th>Votes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                `;
-                candidatesForPosition.forEach((candidate, index) => {
+                resultsHtml += '<table class="results-table"><thead><tr><th>Candidate</th><th>Party</th><th>Votes</th><th>Percentage</th></tr></thead><tbody>';
+                let totalVotesForPosition = 0;
+                const candidatesForPosition = candidatesSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+
+                candidatesForPosition.forEach(candidate => {
+                    totalVotesForPosition += (candidate.votes || 0);
+                });
+
+                candidatesForPosition.forEach(candidate => {
+                    const percentage = totalVotesForPosition > 0 ? ((candidate.votes / totalVotesForPosition) * 100).toFixed(2) : '0.00';
                     resultsHtml += `
                         <tr>
-                            <td>${index + 1}</td>
                             <td>${candidate.name}</td>
                             <td>${candidate.party || 'Independent'}</td>
-                            <td>${candidate.district || 'N/A'}</td>
                             <td>${candidate.votes || 0}</td>
+                            <td>${percentage}%</td>
                         </tr>
                     `;
                 });
                 resultsHtml += '</tbody></table>';
+                resultsHtml += `<p><strong>Total Votes for ${position}:</strong> ${totalVotesForPosition}</p>`;
             }
             elements.resultsDisplayContainer.innerHTML = resultsHtml;
 
         } catch (error) {
-            console.error('Error displaying results:', error);
+            console.error('Error displaying election results:', error);
             elements.resultsDisplayContainer.innerHTML = '<p class="error-message">Failed to load results.</p>';
-            displayMessage(elements.adminErrorMessage, 'Failed to load results.', 'error');
+            displayMessage(elements.adminErrorMessage, 'Failed to load election results.', 'error');
         }
     }
-
-
-    elements.logoutButton.addEventListener('click', async () => {
-        try {
-            await signOut(auth);
-            const response = await fetch('/sessionLogout', { method: 'POST' });
-            if (!response.ok) {
-                throw new Error('Server logout failed.');
-            }
-            sessionStorage.clear();
-            alert('You have been logged out.');
-            window.location.href = '/login';
-        } catch (error) {
-            console.error('Error during admin logout:', error);
-            displayMessage(elements.adminErrorMessage, 'Logout failed. Please try again.', 'error');
-        }
-    });
-
-    document.querySelector('.tab-button[data-tab="dashboard-section"]').click();
 });
