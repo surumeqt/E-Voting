@@ -1,123 +1,186 @@
+/*
+ * General Form Styling for Login and Register Pages
+ *
+ * This stylesheet provides core styles for form containers, input fields,
+ * buttons, and specific elements like password requirements and messages.
+ * It uses a green-based color palette for consistency with a "voting system" theme.
+ */
+
+/* ====================
+ * 1. Base Container Styles
+ * ==================== */
 .login-container,
 .register-container {
     max-width: 400px;
-    margin: 2rem auto;
+    margin: 2rem auto; /* Centers the container horizontally with top/bottom margin */
     padding: 2rem;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #E8F5E9;
+    border-radius: 8px; /* Slightly rounded corners for a softer look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly stronger, but still subtle shadow */
+    border: 1px solid #E8F5E9; /* Very light green border */
 }
 
+/* ====================
+ * 2. Form Group & Label Styles
+ * ==================== */
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem; /* Consistent spacing between form elements */
 }
 
 label {
-    display: block;
+    display: block; /* Ensures label takes its own line */
     margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #2E7D32; /* Dark green */
+    font-weight: 600; /* Slightly bolder for better readability */
+    color: #2E7D32; /* Dark green for labels */
 }
 
-input,
+/* ====================
+ * 3. Input & Select Field Styles
+ * ==================== */
+input:not([type="checkbox"]), /* Exclude checkboxes from full width and padding */
 select {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #C8E6C9; /* Light green */
+    border: 1px solid #C8E6C9; /* Light green border */
     border-radius: 4px;
-    transition: border-color 0.2s ease;
+    font-size: 1rem; /* Ensure consistent font size */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease; /* Smooth transition for focus states */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 input:focus,
 select:focus {
-    outline: none;
-    border-color: #2E7D32;
-    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+    outline: none; /* Removes default browser outline */
+    border-color: #2E7D32; /* Darker green on focus */
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.25); /* Slightly larger and more visible focus shadow */
 }
 
+/* ====================
+ * 4. Button Styles
+ * ==================== */
 button {
-    background-color: #2E7D32;
+    background-color: #2E7D32; /* Primary green button background */
     color: white;
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    width: 100%;
-    font-weight: 500;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%; /* Full width button */
+    font-weight: 600; /* Slightly bolder text */
+    font-size: 1rem; /* Consistent font size */
+    transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease; /* Smooth transitions */
+    display: flex; /* Allows for centering content like spinner */
+    justify-content: center; /* Centers content horizontally */
+    align-items: center; /* Centers content vertically */
+    gap: 0.5rem; /* Space between text and spinner */
 }
 
 button:hover,
 button:focus {
-    background-color: #388E3C;
+    background-color: #388E3C; /* Slightly darker green on hover/focus */
     outline: none;
 }
 
 button:active {
-    transform: translateY(1px);
+    transform: translateY(1px); /* Subtle press effect */
 }
 
 button:disabled {
-    background-color: #A5D6A7;
+    background-color: #A5D6A7; /* Lighter green for disabled state */
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.8; /* Slightly more opaque than 0.7 for better visibility */
 }
 
-/* Loading indicator */
+/* ====================
+ * 5. Loading Indicator (Spinner)
+ * ==================== */
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #E8F5E9;
-    border-top: 4px solid #2E7D32;
+    width: 24px; /* Reduced size for better integration */
+    height: 24px; /* Reduced size */
+    border: 3px solid rgba(255, 255, 255, 0.3); /* Lighter border for background */
+    border-top: 3px solid white; /* White spinning part */
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: 1rem auto;
+    /* margin: 1rem auto; This was for standalone spinner, now integrated into button */
 }
 
+/* Keyframe animation for the spinner */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Error and Success Messages */
+/* Hide button text when spinner is active */
+button .button-text {
+    display: block; /* Ensure it's a block for display manipulation */
+}
+
+button[disabled] .button-text {
+    display: none; /* Hide text when button is disabled and spinner is active */
+}
+
+/* ====================
+ * 6. Error and Success Messages
+ * ==================== */
 .error-message,
 .success-message {
     padding: 1rem;
-    margin: 1rem 0;
+    margin: 1.5rem 0; /* Slightly more vertical margin */
     border-radius: 4px;
-    animation: slideIn 0.3s ease-out;
+    animation: fadeIn 0.3s ease-out; /* Changed to fadeIn as slideIn wasn't defined */
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.95rem; /* Slightly larger text for messages */
+    font-weight: 500;
 }
 
 .error-message {
-    background-color: #FFEBEE;
-    color: #C62828;
-    border: 1px solid #FFCDD2;
+    background-color: #FFEBEE; /* Light red background */
+    color: #C62828; /* Dark red text */
+    border: 1px solid #FFCDD2; /* Red border */
 }
 
 .success-message {
-    background-color: #E8F5E9;
-    color: #2E7D32;
-    border: 1px solid #C8E6C9;
+    background-color: #E8F5E9; /* Light green background */
+    color: #2E7D32; /* Dark green text */
+    border: 1px solid #C8E6C9; /* Green border */
 }
+
+/* Basic fade-in animation for messages */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ====================
+ * 7. Checkbox & Password Visibility
+ * ==================== */
 .checkbox-label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem; /* Increased gap for better spacing */
     cursor: pointer;
+    font-size: 0.95rem;
+    color: #333; /* More neutral color for the label text */
 }
 
 .checkbox-label input[type="checkbox"] {
-    width: auto;
+    width: 18px; /* Standardize checkbox size */
+    height: 18px;
+    accent-color: #2E7D32; /* Changes the checkbox color itself in modern browsers */
+    margin: 0; /* Remove default margin */
 }
 
 .password-input-container {
     position: relative;
     display: flex;
     align-items: center;
+}
+
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] { /* Adjust if you change type to text on toggle */
+    padding-right: 40px; /* Make space for the eye icon */
 }
 
 .toggle-password {
@@ -128,42 +191,116 @@ button:disabled {
     cursor: pointer;
     padding: 0;
     width: auto;
+    font-size: 1.2rem; /* Larger eye icon */
+    color: #666; /* Softer color for the icon */
+    transition: color 0.2s ease;
 }
-.toggle-password:hover{
-    background-color: #fff;
+
+.toggle-password:hover {
+    background-color: transparent; /* Keep background transparent on hover */
+    color: #2E7D32; /* Darker green on hover */
 }
+
+/* ====================
+ * 8. Password Requirements List
+ * ==================== */
 .password-requirements {
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-    color: #666;
+    margin-top: 0.75rem; /* Increased margin from input */
+    font-size: 0.85rem; /* Slightly smaller text for requirements */
+    color: #555;
+    background-color: #F9FBE7; /* Very light yellow/green background for emphasis */
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #DCE775; /* Light green border */
 }
 
 .password-requirements ul {
-    list-style: none;
-    padding-left: 1rem;
-    margin-top: 0.25rem;
+    list-style: none; /* Remove default bullet points */
+    padding-left: 0; /* Remove default padding */
+    margin-top: 0.5rem;
 }
 
 .password-requirements li {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.4rem; /* Spacing between list items */
     color: #666;
+    display: flex; /* Allows custom checkmark positioning */
+    align-items: center;
+    line-height: 1.3; /* Better line spacing */
+}
+
+.password-requirements li::before {
+    content: '•'; /* Default bullet point */
+    margin-right: 0.75rem;
+    color: #999; /* Softer color for default bullet */
+    font-weight: bold;
+    display: inline-block;
+    width: 15px; /* Fixed width for alignment */
 }
 
 .password-requirements li.valid {
-    color: #2E7D32;
+    color: #2E7D32; /* Dark green for valid requirements */
 }
 
 .password-requirements li.valid::before {
-    content: '✓';
-    margin-right: 0.5rem;
-    color: #2E7D32;
+    content: '✓'; /* Checkmark for valid items */
+    color: #2E7D32; /* Dark green checkmark */
+    font-weight: bolder;
+    font-size: 1.1rem; /* Larger checkmark */
 }
 
-/* Loading spinner in button */
-button .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ffffff;
-    border-top: 2px solid transparent;
-    margin: 0 auto;
-} 
+/* ====================
+ * 9. Form Footer (Links)
+ * ==================== */
+.form-footer {
+    text-align: center;
+    margin-top: 2rem; /* More space above the footer links */
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.form-footer a {
+    color: #4CAF50; /* Primary green for links */
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.form-footer a:hover {
+    color: #388E3C; /* Darker green on hover */
+    text-decoration: underline;
+}
+
+/* ====================
+ * 10. Utility / Global Styles (e.g., body background)
+ * ==================== */
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    background-color: #F0F2F5; /* Light gray background for the entire page */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ensures content is vertically centered on the page */
+    color: #333; /* Default text color */
+}
+
+h2 {
+    text-align: center;
+    color: #2E7D32; /* Dark green for headings */
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* General message box style */
+.message-box {
+    text-align: center;
+    padding: 1rem;
+    margin: 1.5rem auto;
+    border-radius: 4px;
+    background-color: #FFFDE7; /* Light yellow background */
+    color: #FFB300; /* Amber text */
+    border: 1px solid #FFE082; /* Light amber border */
+    max-width: 400px;
+}
