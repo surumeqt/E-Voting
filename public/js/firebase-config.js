@@ -2,6 +2,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebas
 import { getAuth } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
 import { getStorage } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-storage.js';
+import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-storage.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyClbIt-R3Vywa6E4NCz2jaESqpsOKnykD4",
