@@ -16,7 +16,7 @@
                 <button class="tab-button" data-tab="candidates-section"><i class="fas fa-user-tie"></i> Candidates</button>
                 <button class="tab-button" data-tab="voters-section"><i class="fas fa-users"></i> Voters</button>
                 <button class="tab-button" data-tab="results-section"><i class="fas fa-chart-bar"></i> Results</button>
-                </nav>
+            </nav>
             <button id="admin-logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </aside>
 
@@ -74,7 +74,10 @@
                 <div class="filter-controls">
                     <select id="candidate-filter-position">
                         <option value="">Filter by Position</option>
-                        </select>
+                        <option value="Mayor">Mayor</option>
+                        <option value="Vice-Mayor">Vice-Mayor</option>
+                        <option value="Councillor">Councillor</option>
+                    </select>
                     <input type="text" id="candidate-search-input" placeholder="Search by Name/District">
                     <button id="candidate-search-button"><i class="fas fa-search"></i> Search</button>
                 </div>
